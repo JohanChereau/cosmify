@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashSet},
+    collections::HashSet,
     fs,
     path::{Path, PathBuf},
 };
@@ -13,8 +13,11 @@ use crate::{
         read_pack_name_from_language, verify_archive, write_archive,
     },
     backup::{create_backup, delete_backup, find_backup, list_backups},
+    cosmetics::{
+        delete_cosmetic_pack, import_cosmetic_pack, list_cosmetic_packs, set_cosmetic_pack_icon,
+        update_cosmetic_pack,
+    },
     crypto::{encrypt_pack, verify_encrypted_pack},
-    cosmetics::{delete_cosmetic_pack, import_cosmetic_pack, list_cosmetic_packs, set_cosmetic_pack_icon, update_cosmetic_pack},
     keys::load_keys,
     models::*,
     paths::{resolve_premium_cache, skin_packs_path, AppPaths},
@@ -123,7 +126,11 @@ impl Cosmify {
         packs.sort_by(|a, b| {
             b.known_to_minecraft
                 .cmp(&a.known_to_minecraft)
-                .then_with(|| a.name.to_ascii_lowercase().cmp(&b.name.to_ascii_lowercase()))
+                .then_with(|| {
+                    a.name
+                        .to_ascii_lowercase()
+                        .cmp(&b.name.to_ascii_lowercase())
+                })
         });
         Ok(packs)
     }
@@ -195,8 +202,7 @@ impl Cosmify {
         let custom = analyze_custom_pack(&custom_path)?;
         let host = self.validated_host_pack(Path::new(&request.host_filepath))?;
         let files_to_copy = custom_files_to_copy(&custom_path)?.len();
-        let host_assets_to_remove =
-            count_replaceable_assets_in_archive(Path::new(&host.filepath))?;
+        let host_assets_to_remove = count_replaceable_assets_in_archive(Path::new(&host.filepath))?;
         let settings = self.settings()?;
         let mut warnings = custom.warnings.clone();
         if !minecraft_processes().is_empty() {
@@ -272,7 +278,13 @@ impl Cosmify {
             return Err(CosmifyError::HostChanged);
         }
 
-        emit(progress, operation_id, "backup", "Creating a safety backup", 14);
+        emit(
+            progress,
+            operation_id,
+            "backup",
+            "Creating a safety backup",
+            14,
+        );
         let backup = if settings.auto_backup {
             Some(create_backup(&self.paths.backups_root, &host, "install")?)
         } else {
@@ -286,16 +298,40 @@ impl Cosmify {
         let work = temp.path().join("work");
         fs::create_dir_all(&work).map_err(|e| CosmifyError::io(&work, e))?;
 
-        emit(progress, operation_id, "extract", "Preparing the host pack", 26);
+        emit(
+            progress,
+            operation_id,
+            "extract",
+            "Preparing the host pack",
+            26,
+        );
         extract_archive(Path::new(&host.filepath), &work)?;
 
-        emit(progress, operation_id, "clean", "Removing replaceable host assets", 38);
+        emit(
+            progress,
+            operation_id,
+            "clean",
+            "Removing replaceable host assets",
+            38,
+        );
         delete_replaceable_assets(&work)?;
 
-        emit(progress, operation_id, "copy", "Copying custom cosmetics", 52);
+        emit(
+            progress,
+            operation_id,
+            "copy",
+            "Copying custom cosmetics",
+            52,
+        );
         let modified_paths = copy_custom_files(&custom_path, &work)?;
 
-        emit(progress, operation_id, "encrypt", "Encrypting custom assets", 68);
+        emit(
+            progress,
+            operation_id,
+            "encrypt",
+            "Encrypting custom assets",
+            68,
+        );
         let keys_dir = self.keys_directory(&settings);
         let keys = load_keys(keys_dir.as_deref())?;
         let require_existing = work.join("contents.json").exists();
@@ -306,12 +342,24 @@ impl Cosmify {
             ));
         }
 
-        emit(progress, operation_id, "verify", "Verifying encrypted content", 78);
+        emit(
+            progress,
+            operation_id,
+            "verify",
+            "Verifying encrypted content",
+            78,
+        );
         verify_encrypted_pack(&work, &keys)?;
 
         let host_path = PathBuf::from(&host.filepath);
         let output_tmp = sibling_temp_path(&host_path, operation_id);
-        emit(progress, operation_id, "archive", "Rebuilding the premium-cache archive", 87);
+        emit(
+            progress,
+            operation_id,
+            "archive",
+            "Rebuilding the premium-cache archive",
+            87,
+        );
         let build_result = (|| -> Result<()> {
             write_archive(&work, &output_tmp)?;
             verify_archive(&output_tmp, &host.uuid)?;
@@ -322,7 +370,13 @@ impl Cosmify {
             return Err(error);
         }
 
-        emit(progress, operation_id, "commit", "Committing changes safely", 95);
+        emit(
+            progress,
+            operation_id,
+            "commit",
+            "Committing changes safely",
+            95,
+        );
         if let Err(error) = safe_replace(&output_tmp, &host_path) {
             let _ = fs::remove_file(&output_tmp);
             return Err(error);
@@ -334,7 +388,13 @@ impl Cosmify {
             ));
         }
 
-        emit(progress, operation_id, "done", "Installed successfully", 100);
+        emit(
+            progress,
+            operation_id,
+            "done",
+            "Installed successfully",
+            100,
+        );
         Ok(OperationResult {
             success: true,
             operation_id: operation_id.to_string(),
@@ -425,7 +485,11 @@ impl Cosmify {
 
         let undo_backup = if target.exists() && settings.auto_backup {
             if let Ok(current) = self.host_pack_from_path(&target, true) {
-                Some(create_backup(&self.paths.backups_root, &current, "pre-restore")?)
+                Some(create_backup(
+                    &self.paths.backups_root,
+                    &current,
+                    "pre-restore",
+                )?)
             } else {
                 None
             }
@@ -528,11 +592,10 @@ impl Cosmify {
         let settings = self.settings()?;
         let premium = resolve_premium_cache(&settings).ok_or(CosmifyError::PremiumCacheNotFound)?;
         let skin_folder = skin_packs_path(&premium);
-        let canonical_folder = fs::canonicalize(&skin_folder)
-            .map_err(|e| CosmifyError::io(&skin_folder, e))?;
+        let canonical_folder =
+            fs::canonicalize(&skin_folder).map_err(|e| CosmifyError::io(&skin_folder, e))?;
         let inside = if host.exists() {
-            let canonical_host =
-                fs::canonicalize(host).map_err(|e| CosmifyError::io(host, e))?;
+            let canonical_host = fs::canonicalize(host).map_err(|e| CosmifyError::io(host, e))?;
             canonical_host.starts_with(&canonical_folder)
         } else {
             let parent = host
@@ -554,19 +617,25 @@ impl Cosmify {
     }
 
     fn host_pack_from_path(&self, path: &Path, known_to_minecraft: bool) -> Result<HostPack> {
-        let manifest = read_manifest_from_archive(path)?
-            .ok_or_else(|| CosmifyError::InvalidHostPack("No readable manifest.json".to_string()))?;
+        let manifest = read_manifest_from_archive(path)?.ok_or_else(|| {
+            CosmifyError::InvalidHostPack("No readable manifest.json".to_string())
+        })?;
         let uuid = manifest
             .pointer("/header/uuid")
             .and_then(Value::as_str)
-            .ok_or_else(|| CosmifyError::InvalidHostPack("manifest.header.uuid is missing".to_string()))?
+            .ok_or_else(|| {
+                CosmifyError::InvalidHostPack("manifest.header.uuid is missing".to_string())
+            })?
             .to_string();
         let mut name = manifest
             .pointer("/header/name")
             .and_then(Value::as_str)
             .unwrap_or("Unknown")
             .to_string();
-        if matches!(name.to_ascii_lowercase().as_str(), "pack.name" | "unknown" | "pack.description") {
+        if matches!(
+            name.to_ascii_lowercase().as_str(),
+            "pack.name" | "unknown" | "pack.description"
+        ) {
             if let Some(localized) = read_pack_name_from_language(path)? {
                 name = localized;
             }
@@ -661,10 +730,9 @@ fn copy_custom_files(custom: &Path, destination: &Path) -> Result<HashSet<String
             for copied in walkdir::WalkDir::new(&target).min_depth(1) {
                 let copied = copied?;
                 if copied.file_type().is_file() {
-                    let relative = copied
-                        .path()
-                        .strip_prefix(destination)
-                        .map_err(|_| CosmifyError::Internal("Failed to resolve copied asset path".to_string()))?;
+                    let relative = copied.path().strip_prefix(destination).map_err(|_| {
+                        CosmifyError::Internal("Failed to resolve copied asset path".to_string())
+                    })?;
                     modified.insert(relative.to_string_lossy().replace('\\', "/"));
                 }
             }
@@ -730,7 +798,10 @@ fn safe_replace(temp: &Path, target: &Path) -> Result<()> {
         .ok_or_else(|| CosmifyError::Internal("Target has no parent directory".to_string()))?;
     let swap = parent.join(format!(
         ".{}.cosmify-swap-{}",
-        target.file_name().and_then(|value| value.to_str()).unwrap_or("pack"),
+        target
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("pack"),
         uuid::Uuid::new_v4()
     ));
 
@@ -752,4 +823,3 @@ fn safe_replace(temp: &Path, target: &Path) -> Result<()> {
         }
     }
 }
-

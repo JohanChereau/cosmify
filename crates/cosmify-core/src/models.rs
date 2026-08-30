@@ -187,4 +187,3 @@ pub struct UpdateCosmeticPackRequest {
     pub uuid: String,
     pub version: String,
 }
-

@@ -18,8 +18,7 @@ import type {
 export const api = {
   status: () => invoke<MinecraftStatus>('get_system_status'),
   hostPacks: () => invoke<HostPack[]>('list_host_packs'),
-  analyzeCustomPack: (path: string) =>
-    invoke<CustomPackAnalysis>('analyze_custom_pack', { path }),
+  analyzeCustomPack: (path: string) => invoke<CustomPackAnalysis>('analyze_custom_pack', { path }),
   cosmeticPacks: () => invoke<CosmeticPack[]>('list_cosmetic_packs'),
   importCosmeticPack: (sourcePath: string) =>
     invoke<CosmeticPack>('import_cosmetic_pack', { request: { sourcePath } }),

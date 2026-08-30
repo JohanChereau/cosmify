@@ -1,4 +1,8 @@
-use std::{collections::{HashMap, HashSet}, fs, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    path::Path,
+};
 
 use aes::{cipher::KeyIvInit, Aes256};
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
@@ -79,10 +83,11 @@ pub(crate) fn create_header(uuid: &str) -> Result<Vec<u8>> {
 }
 
 fn should_skip_encryption(relative: &str) -> bool {
-    relative
-        .replace('\\', "/")
-        .split('/')
-        .any(|part| SKIP_ENCRYPT.iter().any(|skip| part.eq_ignore_ascii_case(skip)))
+    relative.replace('\\', "/").split('/').any(|part| {
+        SKIP_ENCRYPT
+            .iter()
+            .any(|skip| part.eq_ignore_ascii_case(skip))
+    })
 }
 
 fn random_file_key() -> String {
@@ -105,7 +110,10 @@ fn content_key_for(uuid: &str, keys: &HashMap<String, Vec<u8>>) -> [u8; 32] {
     normalize_32(source)
 }
 
-fn read_existing_contents(pack_dir: &Path, content_key: &[u8; 32]) -> Result<Option<HashMap<String, String>>> {
+fn read_existing_contents(
+    pack_dir: &Path,
+    content_key: &[u8; 32],
+) -> Result<Option<HashMap<String, String>>> {
     let path = pack_dir.join("contents.json");
     if !path.exists() {
         return Ok(Some(HashMap::new()));
@@ -158,7 +166,9 @@ pub(crate) fn encrypt_pack(
     let uuid = manifest
         .pointer("/header/uuid")
         .and_then(serde_json::Value::as_str)
-        .ok_or_else(|| CosmifyError::InvalidHostPack("manifest.header.uuid is missing".to_string()))?
+        .ok_or_else(|| {
+            CosmifyError::InvalidHostPack("manifest.header.uuid is missing".to_string())
+        })?
         .to_string();
 
     let content_key = content_key_for(&uuid, keys);
@@ -195,7 +205,10 @@ pub(crate) fn encrypt_pack(
         }
 
         if should_skip_encryption(&rel) {
-            entries.push(ContentEntry { path: rel, key: None });
+            entries.push(ContentEntry {
+                path: rel,
+                key: None,
+            });
             continue;
         }
 
@@ -206,7 +219,11 @@ pub(crate) fn encrypt_pack(
         if must_encrypt {
             let file_key_bytes = file_key.as_bytes();
             let plain = fs::read(path).map_err(|e| CosmifyError::io(path, e))?;
-            let encrypted = encrypt_bytes(file_key_bytes, &file_key_bytes[..16.min(file_key_bytes.len())], &plain);
+            let encrypted = encrypt_bytes(
+                file_key_bytes,
+                &file_key_bytes[..16.min(file_key_bytes.len())],
+                &plain,
+            );
             fs::write(path, encrypted).map_err(|e| CosmifyError::io(path, e))?;
         }
 
@@ -235,7 +252,10 @@ pub(crate) fn encrypt_pack(
     Ok(uuid)
 }
 
-pub(crate) fn verify_encrypted_pack(pack_dir: &Path, keys: &HashMap<String, Vec<u8>>) -> Result<()> {
+pub(crate) fn verify_encrypted_pack(
+    pack_dir: &Path,
+    keys: &HashMap<String, Vec<u8>>,
+) -> Result<()> {
     let manifest_path = pack_dir.join("manifest.json");
     let manifest: serde_json::Value = serde_json::from_slice(
         &fs::read(&manifest_path).map_err(|e| CosmifyError::io(&manifest_path, e))?,
@@ -243,7 +263,9 @@ pub(crate) fn verify_encrypted_pack(pack_dir: &Path, keys: &HashMap<String, Vec<
     let uuid = manifest
         .pointer("/header/uuid")
         .and_then(serde_json::Value::as_str)
-        .ok_or_else(|| CosmifyError::InvalidHostPack("manifest.header.uuid is missing".to_string()))?;
+        .ok_or_else(|| {
+            CosmifyError::InvalidHostPack("manifest.header.uuid is missing".to_string())
+        })?;
     let content_key = content_key_for(uuid, keys);
     let contents_path = pack_dir.join("contents.json");
     let bytes = fs::read(&contents_path).map_err(|e| CosmifyError::io(&contents_path, e))?;
@@ -257,8 +279,8 @@ pub(crate) fn verify_encrypted_pack(pack_dir: &Path, keys: &HashMap<String, Vec<
         .trim_end_matches('\0')
         .trim()
         .to_string();
-    let contents: ContentsJson = serde_json::from_str(&text)
-        .map_err(|_| CosmifyError::ContentKeyUnavailable)?;
+    let contents: ContentsJson =
+        serde_json::from_str(&text).map_err(|_| CosmifyError::ContentKeyUnavailable)?;
 
     let mut encrypted_count = 0usize;
     for entry in contents.content {
@@ -266,7 +288,7 @@ pub(crate) fn verify_encrypted_pack(pack_dir: &Path, keys: &HashMap<String, Vec<
             continue;
         };
         encrypted_count += 1;
-        if file_key.as_bytes().len() != 32 {
+        if file_key.len() != 32 {
             return Err(CosmifyError::InvalidHostPack(format!(
                 "Invalid per-file key length for {}",
                 entry.path

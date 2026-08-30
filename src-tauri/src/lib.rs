@@ -60,7 +60,9 @@ async fn import_cosmetic_pack(
     let core = state.core.clone();
     let lock = state.mutation_lock.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _guard = lock.lock().map_err(|_| "The operation lock is poisoned".to_string())?;
+        let _guard = lock
+            .lock()
+            .map_err(|_| "The operation lock is poisoned".to_string())?;
         core.import_cosmetic_pack(request).map_err(core_error)
     })
     .await
@@ -75,7 +77,9 @@ async fn update_cosmetic_pack(
     let core = state.core.clone();
     let lock = state.mutation_lock.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _guard = lock.lock().map_err(|_| "The operation lock is poisoned".to_string())?;
+        let _guard = lock
+            .lock()
+            .map_err(|_| "The operation lock is poisoned".to_string())?;
         core.update_cosmetic_pack(request).map_err(core_error)
     })
     .await
@@ -91,7 +95,9 @@ async fn set_cosmetic_pack_icon(
     let core = state.core.clone();
     let lock = state.mutation_lock.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _guard = lock.lock().map_err(|_| "The operation lock is poisoned".to_string())?;
+        let _guard = lock
+            .lock()
+            .map_err(|_| "The operation lock is poisoned".to_string())?;
         core.set_cosmetic_pack_icon(&id, std::path::Path::new(&source_path))
             .map_err(core_error)
     })
@@ -104,7 +110,9 @@ async fn delete_cosmetic_pack(id: String, state: State<'_, AppState>) -> Result<
     let core = state.core.clone();
     let lock = state.mutation_lock.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _guard = lock.lock().map_err(|_| "The operation lock is poisoned".to_string())?;
+        let _guard = lock
+            .lock()
+            .map_err(|_| "The operation lock is poisoned".to_string())?;
         core.delete_cosmetic_pack(&id).map_err(core_error)
     })
     .await

@@ -113,4 +113,3 @@ export interface UpdateCosmeticPackInput {
   uuid: string;
   version: string;
 }
-

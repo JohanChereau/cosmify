@@ -14,7 +14,11 @@ export function ToolsPage() {
   const [busy, setBusy] = useState(false);
 
   async function pickInput() {
-    const value = await open({ directory: true, multiple: false, title: 'Choose a plaintext skin pack' });
+    const value = await open({
+      directory: true,
+      multiple: false,
+      title: 'Choose a plaintext skin pack'
+    });
     if (value && !Array.isArray(value)) setInput(value);
   }
   async function pickOutput() {
@@ -23,27 +27,72 @@ export function ToolsPage() {
   }
   async function encrypt() {
     try {
-      setBusy(true); setError(''); setResult('');
+      setBusy(true);
+      setError('');
+      setResult('');
       const value = await api.encryptPackDirectory(input, output);
       setResult(value.outputFile);
-    } catch (reason) { setError(String(reason)); }
-    finally { setBusy(false); }
+    } catch (reason) {
+      setError(String(reason));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  return <Page title="Tools" description="Low-level utilities for pack authors and troubleshooting.">
-    <Card>
-      <CardHeader title="Encrypt a standalone skin pack" description="Encrypt a plaintext pack in an isolated temporary workspace; the source folder is never modified in place." action={<LockKeyhole size={18} />} />
-      <div className="tool-fields">
-        <ToolPath label="Plaintext pack" value={input} onBrowse={() => void pickInput()} />
-        <ToolPath label="Output directory" value={output} onBrowse={() => void pickOutput()} />
-      </div>
-      {error ? <div className="alert alert--danger">{error}</div> : null}
-      {result ? <div className="result-box"><FileArchive size={17} /><div><strong>Encrypted pack created</strong><code>{result}</code></div></div> : null}
-      <div className="action-row"><Button disabled={!input || !output || busy} icon={<LockKeyhole size={15} />} onClick={() => void encrypt()}>{busy ? 'Encrypting…' : 'Encrypt pack'}</Button></div>
-    </Card>
-  </Page>;
+  return (
+    <Page title="Tools" description="Low-level utilities for pack authors and troubleshooting.">
+      <Card>
+        <CardHeader
+          title="Encrypt a standalone skin pack"
+          description="Encrypt a plaintext pack in an isolated temporary workspace; the source folder is never modified in place."
+          action={<LockKeyhole size={18} />}
+        />
+        <div className="tool-fields">
+          <ToolPath label="Plaintext pack" value={input} onBrowse={() => void pickInput()} />
+          <ToolPath label="Output directory" value={output} onBrowse={() => void pickOutput()} />
+        </div>
+        {error ? <div className="alert alert--danger">{error}</div> : null}
+        {result ? (
+          <div className="result-box">
+            <FileArchive size={17} />
+            <div>
+              <strong>Encrypted pack created</strong>
+              <code>{result}</code>
+            </div>
+          </div>
+        ) : null}
+        <div className="action-row">
+          <Button
+            disabled={!input || !output || busy}
+            icon={<LockKeyhole size={15} />}
+            onClick={() => void encrypt()}
+          >
+            {busy ? 'Encrypting…' : 'Encrypt pack'}
+          </Button>
+        </div>
+      </Card>
+    </Page>
+  );
 }
 
-function ToolPath({ label, value, onBrowse }: { label: string; value: string; onBrowse: () => void }) {
-  return <div className="path-field"><label>{label}</label><div><code>{value || 'Not selected'}</code><Button variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={onBrowse}>Browse</Button></div></div>;
+function ToolPath({
+  label,
+  value,
+  onBrowse
+}: {
+  label: string;
+  value: string;
+  onBrowse: () => void;
+}) {
+  return (
+    <div className="path-field">
+      <label>{label}</label>
+      <div>
+        <code>{value || 'Not selected'}</code>
+        <Button variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={onBrowse}>
+          Browse
+        </Button>
+      </div>
+    </div>
+  );
 }

@@ -1,8 +1,8 @@
 mod activity;
 mod archive;
 mod backup;
-mod crypto;
 mod cosmetics;
+mod crypto;
 mod error;
 mod keys;
 mod models;

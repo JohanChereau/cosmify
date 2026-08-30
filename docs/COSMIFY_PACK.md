@@ -20,7 +20,6 @@ pack-root/
 
 Schema version 1. A machine-readable JSON Schema is available at [`schemas/cosmify-pack.schema.json`](../schemas/cosmify-pack.schema.json).
 
-
 ```json
 {
   "schemaVersion": 1,

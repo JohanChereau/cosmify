@@ -113,24 +113,30 @@ pub(crate) fn write_archive(source: &Path, output: &Path) -> Result<()> {
             continue;
         }
         zip.start_file(name, options)?;
-        let mut source_file = File::open(entry.path())
-            .map_err(|e| CosmifyError::io(entry.path(), e))?;
-        std::io::copy(&mut source_file, &mut zip)
-            .map_err(|e| CosmifyError::io(output, e))?;
+        let mut source_file =
+            File::open(entry.path()).map_err(|e| CosmifyError::io(entry.path(), e))?;
+        std::io::copy(&mut source_file, &mut zip).map_err(|e| CosmifyError::io(output, e))?;
     }
     let mut output_file = zip.finish()?;
-    output_file.flush().map_err(|e| CosmifyError::io(output, e))?;
-    output_file.sync_all().map_err(|e| CosmifyError::io(output, e))?;
+    output_file
+        .flush()
+        .map_err(|e| CosmifyError::io(output, e))?;
+    output_file
+        .sync_all()
+        .map_err(|e| CosmifyError::io(output, e))?;
     Ok(())
 }
 
 pub(crate) fn verify_archive(path: &Path, expected_uuid: &str) -> Result<()> {
-    let manifest = read_manifest_from_archive(path)?
-        .ok_or_else(|| CosmifyError::InvalidHostPack("Rebuilt archive has no manifest.json".to_string()))?;
+    let manifest = read_manifest_from_archive(path)?.ok_or_else(|| {
+        CosmifyError::InvalidHostPack("Rebuilt archive has no manifest.json".to_string())
+    })?;
     let uuid = manifest
         .pointer("/header/uuid")
         .and_then(Value::as_str)
-        .ok_or_else(|| CosmifyError::InvalidHostPack("Rebuilt manifest has no header.uuid".to_string()))?;
+        .ok_or_else(|| {
+            CosmifyError::InvalidHostPack("Rebuilt manifest has no header.uuid".to_string())
+        })?;
     if uuid != expected_uuid {
         return Err(CosmifyError::InvalidHostPack(
             "Rebuilt archive UUID differs from the host pack".to_string(),
@@ -180,6 +186,9 @@ mod tests {
         extract_archive(&archive, &extracted).unwrap();
 
         assert_eq!(fs::read(extracted.join("hello.txt")).unwrap(), b"hello");
-        assert_eq!(fs::read(extracted.join("nested/data.bin")).unwrap(), [0u8, 1, 2, 255]);
+        assert_eq!(
+            fs::read(extracted.join("nested/data.bin")).unwrap(),
+            [0u8, 1, 2, 255]
+        );
     }
 }

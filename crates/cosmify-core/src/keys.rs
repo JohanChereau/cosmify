@@ -26,8 +26,8 @@ pub(crate) fn load_keys(dir: Option<&Path>) -> Result<HashMap<String, Vec<u8>>> 
 
     let content_keys = dir.join("contentkeys.lst");
     if content_keys.exists() {
-        let text = fs::read_to_string(&content_keys)
-            .map_err(|e| CosmifyError::io(&content_keys, e))?;
+        let text =
+            fs::read_to_string(&content_keys).map_err(|e| CosmifyError::io(&content_keys, e))?;
         let mut lines = text.lines();
         if lines.next().map(str::trim) == Some("!!! Content Key Entries List !!!") {
             for raw in lines {
@@ -38,7 +38,8 @@ pub(crate) fn load_keys(dir: Option<&Path>) -> Result<HashMap<String, Vec<u8>>> 
                 let uuid = uuid.trim();
                 let key = key.trim();
                 if !uuid.is_empty() && !key.is_empty() {
-                    keys.entry(uuid.to_string()).or_insert_with(|| key.as_bytes().to_vec());
+                    keys.entry(uuid.to_string())
+                        .or_insert_with(|| key.as_bytes().to_vec());
                 }
             }
         }

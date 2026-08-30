@@ -1,9 +1,13 @@
-use std::{collections::HashSet, fs, path::{Path, PathBuf}};
+use std::{
+    collections::HashSet,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use serde_json::Value;
 use walkdir::{DirEntry, WalkDir};
 
-use crate::{CustomPackAnalysis, CosmifyError, Result, ValidationMessage};
+use crate::{CosmifyError, CustomPackAnalysis, Result, ValidationMessage};
 
 const IGNORE_CUSTOM: &[&str] = &[
     "desktop.ini",
@@ -176,7 +180,9 @@ mod tests {
         assert_eq!(copied.len(), 2);
         assert!(copied.iter().any(|path| path.ends_with("skin.png")));
         assert!(copied.iter().any(|path| path.ends_with("skins.json")));
-        assert!(copied.iter().all(|path| !path.to_string_lossy().contains(".cosmify")));
+        assert!(copied
+            .iter()
+            .all(|path| !path.to_string_lossy().contains(".cosmify")));
     }
 
     #[test]

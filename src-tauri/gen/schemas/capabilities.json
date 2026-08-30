@@ -1,1 +1,9 @@
-{"main-capability":{"identifier":"main-capability","description":"Minimum capabilities required by the Cosmify desktop UI","local":true,"windows":["main"],"permissions":["core:default","dialog:default"]}}
+{
+  "main-capability": {
+    "identifier": "main-capability",
+    "description": "Minimum capabilities required by the Cosmify desktop UI",
+    "local": true,
+    "windows": ["main"],
+    "permissions": ["core:default", "dialog:default"]
+  }
+}

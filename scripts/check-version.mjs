@@ -1,9 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-const tauriConfig = JSON.parse(await readFile(new URL('../src-tauri/tauri.conf.json', import.meta.url), 'utf8'));
+const tauriConfig = JSON.parse(
+  await readFile(new URL('../src-tauri/tauri.conf.json', import.meta.url), 'utf8')
+);
 const tauriCargo = await readFile(new URL('../src-tauri/Cargo.toml', import.meta.url), 'utf8');
-const coreCargo = await readFile(new URL('../crates/cosmify-core/Cargo.toml', import.meta.url), 'utf8');
+const coreCargo = await readFile(
+  new URL('../crates/cosmify-core/Cargo.toml', import.meta.url),
+  'utf8'
+);
 
 function cargoVersion(source, label) {
   const packageSection = source.split('[package]')[1]?.split(/\n\[/)[0] ?? '';

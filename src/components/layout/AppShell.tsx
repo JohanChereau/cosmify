@@ -24,12 +24,19 @@ const navigation = [
 ];
 
 export function AppShell() {
-  useEffect(() => { void api.settings().then((settings) => applyTheme(settings.theme)).catch(() => undefined); }, []);
+  useEffect(() => {
+    void api
+      .settings()
+      .then((settings) => applyTheme(settings.theme))
+      .catch(() => undefined);
+  }, []);
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand__mark"><WandSparkles size={17} /></div>
+          <div className="brand__mark">
+            <WandSparkles size={17} />
+          </div>
           <div>
             <strong>Cosmify</strong>
             <span>Bedrock cosmetics</span>
@@ -53,7 +60,9 @@ export function AppShell() {
           <span>Local only · no telemetry</span>
         </div>
       </aside>
-      <main className="content"><Outlet /></main>
+      <main className="content">
+        <Outlet />
+      </main>
     </div>
   );
 }

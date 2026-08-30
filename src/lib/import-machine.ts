@@ -1,11 +1,6 @@
 import type { CustomPackAnalysis, HostPack, ImportPreview, ProgressUpdate } from './types';
 
-export type ImportPhase =
-  | 'select-custom'
-  | 'select-host'
-  | 'review'
-  | 'installing'
-  | 'complete';
+export type ImportPhase = 'select-custom' | 'select-host' | 'review' | 'installing' | 'complete';
 
 export interface ImportState {
   phase: ImportPhase;

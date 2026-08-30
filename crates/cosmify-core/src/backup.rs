@@ -1,10 +1,13 @@
-use std::{fs, path::{Path, PathBuf}};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use chrono::Utc;
 
 use crate::{
     util::{path_string, safe_filename, sha256_file},
-    BackupInfo, HostPack, CosmifyError, Result,
+    BackupInfo, CosmifyError, HostPack, Result,
 };
 
 pub(crate) fn create_backup(root: &Path, pack: &HostPack, reason: &str) -> Result<BackupInfo> {

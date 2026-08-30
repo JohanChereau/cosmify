@@ -47,10 +47,7 @@
       "maxLength": 32
     },
     "icon": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": ["string", "null"],
       "pattern": "^icon\\.(png|jpg|jpeg|webp)$"
     },
     "createdAt": {

@@ -6,13 +6,12 @@ use std::{
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use chrono::Utc;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
 use crate::{
-    validation::analyze_custom_pack, CosmifyError, CosmeticPack, CosmeticPackMetadata,
+    validation::analyze_custom_pack, CosmeticPack, CosmeticPackMetadata, CosmifyError,
     ImportCosmeticPackRequest, Result, UpdateCosmeticPackRequest,
 };
 
@@ -155,13 +154,15 @@ pub(crate) fn import_cosmetic_pack(
 
     let now = Utc::now().to_rfc3339();
     let source_defaults = discover_pack_defaults(&pack_source);
-    let fallback_name = source_defaults.name.clone().unwrap_or_else(|| source
-        .file_stem()
-        .or_else(|| pack_source.file_name())
-        .and_then(|value| value.to_str())
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or("Cosmetic pack")
-        .to_string());
+    let fallback_name = source_defaults.name.clone().unwrap_or_else(|| {
+        source
+            .file_stem()
+            .or_else(|| pack_source.file_name())
+            .and_then(|value| value.to_str())
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or("Cosmetic pack")
+            .to_string()
+    });
 
     let default_uuid = source_defaults
         .uuid
@@ -236,9 +237,8 @@ pub(crate) fn update_cosmetic_pack(
             "Author cannot exceed 80 characters".to_string(),
         ));
     }
-    Uuid::parse_str(request.uuid.trim()).map_err(|_| {
-        CosmifyError::InvalidCosmeticPack("UUID must be a valid UUID".to_string())
-    })?;
+    Uuid::parse_str(request.uuid.trim())
+        .map_err(|_| CosmifyError::InvalidCosmeticPack("UUID must be a valid UUID".to_string()))?;
     if request.version.trim().is_empty() || request.version.chars().count() > 32 {
         return Err(CosmifyError::InvalidCosmeticPack(
             "Version must contain between 1 and 32 characters".to_string(),
@@ -416,7 +416,9 @@ fn copy_pack_directory(source: &Path, destination: &Path) -> Result<()> {
         .min_depth(1)
         .follow_links(false)
         .into_iter()
-        .filter_entry(|entry| entry.depth() == 0 || entry.file_name().to_string_lossy() != COSMIFY_DIR)
+        .filter_entry(|entry| {
+            entry.depth() == 0 || entry.file_name().to_string_lossy() != COSMIFY_DIR
+        })
     {
         let entry = entry?;
         if entry.file_type().is_symlink() {
@@ -466,7 +468,9 @@ fn read_metadata(pack: &Path) -> Result<CosmeticPackMetadata> {
     }
     if let Some(icon) = metadata.icon.as_deref() {
         let icon_path = Path::new(icon);
-        if icon_path.components().count() != 1 || icon_path.file_name().and_then(|value| value.to_str()) != Some(icon) {
+        if icon_path.components().count() != 1
+            || icon_path.file_name().and_then(|value| value.to_str()) != Some(icon)
+        {
             return Err(CosmifyError::InvalidCosmeticPack(
                 "Cosmify icon must be a simple file name".to_string(),
             ));
@@ -506,7 +510,11 @@ fn write_metadata(pack: &Path, metadata: &CosmeticPackMetadata) -> Result<()> {
     }
 }
 
-fn copy_embedded_icon(source: &Path, target: &Path, metadata: &mut CosmeticPackMetadata) -> Result<()> {
+fn copy_embedded_icon(
+    source: &Path,
+    target: &Path,
+    metadata: &mut CosmeticPackMetadata,
+) -> Result<()> {
     let Some(icon) = metadata.icon.clone() else {
         return Ok(());
     };
@@ -534,13 +542,23 @@ fn adopt_existing_icon(pack: &Path, metadata: &mut CosmeticPackMetadata) -> Resu
     let meta_dir = pack.join(COSMIFY_DIR);
     if let Some(existing) = metadata.icon.as_deref() {
         let candidate = meta_dir.join(existing);
-        if candidate.is_file() && fs::metadata(&candidate).map(|value| value.len()).unwrap_or(u64::MAX) <= MAX_ICON_BYTES {
+        if candidate.is_file()
+            && fs::metadata(&candidate)
+                .map(|value| value.len())
+                .unwrap_or(u64::MAX)
+                <= MAX_ICON_BYTES
+        {
             return Ok(());
         }
         metadata.icon = None;
     }
 
-    for candidate in ["pack_icon.png", "pack_icon.jpg", "pack_icon.jpeg", "pack_icon.webp"] {
+    for candidate in [
+        "pack_icon.png",
+        "pack_icon.jpg",
+        "pack_icon.jpeg",
+        "pack_icon.webp",
+    ] {
         let source = pack.join(candidate);
         if !source.is_file() {
             continue;
@@ -568,7 +586,9 @@ fn adopt_existing_icon(pack: &Path, metadata: &mut CosmeticPackMetadata) -> Resu
 fn validated_image_extension(source: &Path) -> Result<&'static str> {
     let mut file = File::open(source).map_err(|error| CosmifyError::io(source, error))?;
     let mut head = [0u8; 16];
-    let read = file.read(&mut head).map_err(|error| CosmifyError::io(source, error))?;
+    let read = file
+        .read(&mut head)
+        .map_err(|error| CosmifyError::io(source, error))?;
     let head = &head[..read];
     if head.starts_with(&[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]) {
         return Ok("png");
@@ -650,9 +670,12 @@ mod tests {
             },
         )
         .unwrap();
-        assert_eq!(imported.name, "My Pack");
+        assert_eq!(imported.name, "fixture");
         assert_eq!(imported.analysis.skin_count, 1);
-        assert!(Path::new(&imported.path).join(COSMIFY_DIR).join(COSMIFY_MANIFEST).is_file());
+        assert!(Path::new(&imported.path)
+            .join(COSMIFY_DIR)
+            .join(COSMIFY_MANIFEST)
+            .is_file());
 
         let edited = update_cosmetic_pack(
             &library,

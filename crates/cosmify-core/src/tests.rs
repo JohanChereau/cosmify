@@ -1,4 +1,9 @@
-use std::{collections::{HashMap, HashSet}, fs, io::Write, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    io::Write,
+    path::Path,
+};
 
 use tempfile::tempdir;
 
@@ -64,10 +69,16 @@ fn full_import_pipeline_creates_backup_and_keeps_assets_decryptable() {
     fs::write(host_dir.join("keep.bin"), b"KEEP ME").unwrap();
     fs::write(host_dir.join("pack_icon.png"), b"ICON").unwrap();
 
-    let modified = ["manifest.json", "skins.json", "host.png", "keep.bin", "pack_icon.png"]
-        .into_iter()
-        .map(str::to_string)
-        .collect::<HashSet<_>>();
+    let modified = [
+        "manifest.json",
+        "skins.json",
+        "host.png",
+        "keep.bin",
+        "pack_icon.png",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .collect::<HashSet<_>>();
     encrypt_pack(&host_dir, &HashMap::new(), &modified, false).unwrap();
     let host_file = skin_packs.join(uuid);
     write_archive(&host_dir, &host_file).unwrap();
@@ -188,7 +199,11 @@ fn install_rejects_a_host_that_changed_after_preview() {
     .unwrap();
 
     let uuid = "22222222-2222-3333-4444-555555555555";
-    fs::write(host_dir.join("manifest.json"), serde_json::to_vec(&manifest(uuid)).unwrap()).unwrap();
+    fs::write(
+        host_dir.join("manifest.json"),
+        serde_json::to_vec(&manifest(uuid)).unwrap(),
+    )
+    .unwrap();
     fs::write(host_dir.join("skins.json"), br#"{"skins":[]}"#).unwrap();
     fs::write(host_dir.join("old.png"), b"old").unwrap();
     let modified = ["manifest.json", "skins.json", "old.png"]
@@ -243,7 +258,10 @@ fn settings_reject_unknown_theme_values() {
 }
 
 fn trim_zeroes(input: &[u8]) -> &[u8] {
-    let len = input.iter().rposition(|value| *value != 0).map_or(0, |index| index + 1);
+    let len = input
+        .iter()
+        .rposition(|value| *value != 0)
+        .map_or(0, |index| index + 1);
     &input[..len]
 }
 

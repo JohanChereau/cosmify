@@ -1,4 +1,7 @@
-use std::{env, fs, path::{Path, PathBuf}};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
 
 use directories::ProjectDirs;
 use serde_json::Value;
@@ -67,15 +70,17 @@ fn migrate_legacy_data(old_root: &Path, new_root: &Path) -> Result<()> {
 
 fn copy_directory(source: &Path, destination: &Path) -> Result<()> {
     fs::create_dir_all(destination).map_err(|error| CosmifyError::io(destination, error))?;
-    for entry in walkdir::WalkDir::new(source).min_depth(1).follow_links(false) {
+    for entry in walkdir::WalkDir::new(source)
+        .min_depth(1)
+        .follow_links(false)
+    {
         let entry = entry?;
         if entry.file_type().is_symlink() {
             continue;
         }
-        let relative = entry
-            .path()
-            .strip_prefix(source)
-            .map_err(|_| CosmifyError::Internal("Failed to migrate application data".to_string()))?;
+        let relative = entry.path().strip_prefix(source).map_err(|_| {
+            CosmifyError::Internal("Failed to migrate application data".to_string())
+        })?;
         let target = destination.join(relative);
         if entry.file_type().is_dir() {
             fs::create_dir_all(&target).map_err(|error| CosmifyError::io(&target, error))?;
@@ -92,7 +97,9 @@ fn copy_directory(source: &Path, destination: &Path) -> Result<()> {
 fn rewrite_migrated_json_paths(root: &Path, old_root: &Path, new_root: &Path) -> Result<()> {
     for entry in walkdir::WalkDir::new(root).min_depth(1).follow_links(false) {
         let entry = entry?;
-        if !entry.file_type().is_file() || entry.path().extension().and_then(|v| v.to_str()) != Some("json") {
+        if !entry.file_type().is_file()
+            || entry.path().extension().and_then(|v| v.to_str()) != Some("json")
+        {
             continue;
         }
         let bytes = match fs::read(entry.path()) {
@@ -136,7 +143,7 @@ fn rewrite_json_value(value: &mut Value, old_root: &Path, new_root: &Path) -> bo
                 changed |= rewrite_json_value(item, old_root, new_root);
             }
             changed
-        },
+        }
         _ => false,
     }
 }
@@ -159,7 +166,9 @@ pub(crate) fn resolve_premium_cache(settings: &AppSettings) -> Option<PathBuf> {
     }
 
     if let Ok(appdata) = env::var("APPDATA") {
-        let gdk = Path::new(&appdata).join("Minecraft Bedrock").join("premium_cache");
+        let gdk = Path::new(&appdata)
+            .join("Minecraft Bedrock")
+            .join("premium_cache");
         if gdk.exists() {
             return Some(gdk);
         }

@@ -1,4 +1,8 @@
-use std::{fs::{self, OpenOptions}, io::{BufRead, BufReader, Write}, path::Path};
+use std::{
+    fs::{self, OpenOptions},
+    io::{BufRead, BufReader, Write},
+    path::Path,
+};
 
 use chrono::Utc;
 
@@ -29,8 +33,7 @@ pub(crate) fn append_activity(
         .append(true)
         .open(path)
         .map_err(|e| CosmifyError::io(path, e))?;
-    writeln!(file, "{}", serde_json::to_string(&entry)?)
-        .map_err(|e| CosmifyError::io(path, e))?;
+    writeln!(file, "{}", serde_json::to_string(&entry)?).map_err(|e| CosmifyError::io(path, e))?;
     Ok(entry)
 }
 
@@ -38,14 +41,18 @@ pub(crate) fn list_activity(path: &Path) -> Result<Vec<ActivityEntry>> {
     if !path.exists() {
         return Ok(Vec::new());
     }
+
     let file = fs::File::open(path).map_err(|e| CosmifyError::io(path, e))?;
     let reader = BufReader::new(file);
+
     let mut entries = reader
         .lines()
-        .filter_map(|line| line.ok())
+        .map_while(|line| line.ok())
         .filter_map(|line| serde_json::from_str::<ActivityEntry>(&line).ok())
         .collect::<Vec<_>>();
+
     entries.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     entries.truncate(MAX_ACTIVITY_ENTRIES);
+
     Ok(entries)
 }
