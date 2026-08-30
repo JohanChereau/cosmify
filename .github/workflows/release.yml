@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release-windows:
+    name: Build Windows release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@1.98.0
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify release version
+        run: pnpm check:version
+        env:
+          COSMIFY_RELEASE_TAG: ${{ github.ref_name }}
+
+      - name: Run frontend checks
+        run: pnpm check
+
+      - name: Run Rust checks
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+
+      - name: Build and create draft release
+        uses: tauri-apps/tauri-action@action-v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: 'Cosmify v__VERSION__'
+          releaseBody: |
+            Windows release of Cosmify.
+
+            - Download the NSIS `.exe` or MSI installer below.
+            - Verify downloads against `SHA256SUMS.txt` before installation if desired.
+            - This release is unsigned unless the repository owner configures Windows code signing; SmartScreen may therefore show a reputation warning.
+          releaseDraft: true
+          prerelease: false
+
+      - name: Generate SHA-256 checksums
+        shell: pwsh
+        run: |
+          $roots = @("target/release/bundle", "src-tauri/target/release/bundle") | Where-Object { Test-Path $_ }
+          if (-not $roots) { throw "No Tauri bundle directory was found" }
+          $files = Get-ChildItem -Path $roots -Recurse -File | Where-Object { $_.Extension -in ".exe", ".msi" }
+          if (-not $files) { throw "No installer artifacts were found" }
+          $lines = foreach ($file in $files) {
+            $hash = (Get-FileHash -Algorithm SHA256 $file.FullName).Hash.ToLowerInvariant()
+            "$hash  $($file.Name)"
+          }
+          $lines | Sort-Object | Set-Content -Encoding ascii SHA256SUMS.txt
+
+      - name: Attach checksums to release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber

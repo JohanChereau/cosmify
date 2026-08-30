@@ -1,0 +1,18 @@
+name: Feature request
+description: Suggest an improvement to Cosmify
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed experience
+      description: Describe the workflow from a user's perspective.
+    validations:
+      required: true

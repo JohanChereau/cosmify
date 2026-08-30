@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cosmify pack metadata",
+  "description": "Optional library metadata stored at .cosmify/pack.json. This metadata is never copied into Minecraft.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "name",
+    "description",
+    "author",
+    "uuid",
+    "version",
+    "icon",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 280
+    },
+    "author": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "icon": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^icon\\.(png|jpg|jpeg|webp)$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

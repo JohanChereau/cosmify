@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible Cosmify problem
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Cosmify. Never attach private account data, content keys, or unrelated Minecraft cache files.
+  - type: input
+    id: version
+    attributes:
+      label: Cosmify version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: minecraft
+    attributes:
+      label: Minecraft Bedrock version
+      placeholder: 1.xx.xx / 26.xx
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Cosmetics library
+        - Installation
+        - Host packs
+        - Backups / restore
+        - Encryption tool
+        - UI / UX
+        - Startup / build
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest reproducible sequence.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true

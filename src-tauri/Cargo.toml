@@ -1,0 +1,25 @@
+[package]
+name = "cosmify"
+version = "0.2.0"
+description = "Modern Minecraft Bedrock Persona cosmetics manager"
+authors = ["Cosmify contributors"]
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+
+[lib]
+name = "cosmify_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+cosmify-core = { path = "../crates/cosmify-core" }
+serde = { version = "1", features = ["derive"] }
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
