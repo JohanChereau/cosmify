@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useState, type CSSProperties } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import {
   Archive,
@@ -10,7 +10,9 @@ import {
   PackageCheck,
   Pencil,
   Plus,
+  RotateCcw,
   ShieldCheck,
+  Shuffle,
   Sparkles,
   Trash2,
   TriangleAlert,
@@ -258,7 +260,7 @@ export function CosmeticsPage() {
           <div className="cosmetic-grid">
             {library.map((pack) => (
               <article className="cosmetic-card" key={pack.id}>
-                <div className="cosmetic-card__visual">
+                <div className="cosmetic-card__visual" style={packGradientStyle(pack)}>
                   {pack.iconDataUrl ? (
                     <img src={pack.iconDataUrl} alt="" />
                   ) : (
@@ -604,7 +606,9 @@ function PackEditor({
       description: pack.description,
       author: pack.author,
       uuid: pack.uuid,
-      version: pack.version
+      version: pack.version,
+      bannerGradientStart: pack.bannerGradientStart,
+      bannerGradientEnd: pack.bannerGradientEnd
     });
     setError('');
   }, [pack]);
@@ -665,6 +669,90 @@ function PackEditor({
           </Button>
         </div>
       </div>
+      <div className="gradient-editor">
+        <div
+          className="gradient-editor__preview"
+          style={packGradientStyle(form)}
+          aria-label="Banner gradient preview"
+        >
+          <span>Banner preview</span>
+        </div>
+        <div className="gradient-editor__controls">
+          <div className="gradient-editor__heading">
+            <div>
+              <strong>Banner gradient</strong>
+              <p>Choose two colors for this pack. Existing packs keep the Cosmify default.</p>
+            </div>
+            <div className="gradient-editor__actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Shuffle size={13} />}
+                disabled={busy}
+                onClick={() => {
+                  const [start, end] = randomGradientPair();
+                  setForm((current) =>
+                    current
+                      ? {
+                          ...current,
+                          bannerGradientStart: start,
+                          bannerGradientEnd: end
+                        }
+                      : current
+                  );
+                }}
+              >
+                Randomize
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<RotateCcw size={13} />}
+                disabled={busy}
+                onClick={() =>
+                  setForm((current) =>
+                    current
+                      ? {
+                          ...current,
+                          bannerGradientStart: DEFAULT_GRADIENT_START,
+                          bannerGradientEnd: DEFAULT_GRADIENT_END
+                        }
+                      : current
+                  )
+                }
+              >
+                Default
+              </Button>
+            </div>
+          </div>
+          <div className="gradient-editor__colors">
+            <label className="color-field">
+              <span>Start</span>
+              <div>
+                <input
+                  type="color"
+                  value={form.bannerGradientStart}
+                  onChange={(event) => update('bannerGradientStart', event.target.value)}
+                  aria-label="Banner gradient start color"
+                />
+                <code>{form.bannerGradientStart.toUpperCase()}</code>
+              </div>
+            </label>
+            <label className="color-field">
+              <span>End</span>
+              <div>
+                <input
+                  type="color"
+                  value={form.bannerGradientEnd}
+                  onChange={(event) => update('bannerGradientEnd', event.target.value)}
+                  aria-label="Banner gradient end color"
+                />
+                <code>{form.bannerGradientEnd.toUpperCase()}</code>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
       <div className="form-grid">
         <TextField
           label="Name"
@@ -711,6 +799,32 @@ function PackEditor({
       ) : null}
     </Modal>
   );
+}
+
+const DEFAULT_GRADIENT_START = '#5F5BE8';
+const DEFAULT_GRADIENT_END = '#FF855E';
+
+const GRADIENT_PRESETS = [
+  ['#5F5BE8', '#FF855E'],
+  ['#4E73F8', '#C95AF2'],
+  ['#6657E8', '#EF5F9C'],
+  ['#3B82F6', '#22C7A9'],
+  ['#8B5CF6', '#F973A6'],
+  ['#EF5C76', '#F6B84A'],
+  ['#3FA7D6', '#7B61FF'],
+  ['#5C6CF2', '#50C9B5']
+] as const;
+
+function packGradientStyle(pack: { bannerGradientStart: string; bannerGradientEnd: string }) {
+  return {
+    '--pack-gradient-start': pack.bannerGradientStart || DEFAULT_GRADIENT_START,
+    '--pack-gradient-end': pack.bannerGradientEnd || DEFAULT_GRADIENT_END
+  } as CSSProperties;
+}
+
+function randomGradientPair(): [string, string] {
+  const pair = GRADIENT_PRESETS[Math.floor(Math.random() * GRADIENT_PRESETS.length)];
+  return [pair[0], pair[1]];
 }
 
 function phaseIndex(phase: string) {

@@ -261,6 +261,7 @@ pub fn run() {
     let core = Cosmify::new().expect("failed to initialize Cosmify core");
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState {
             core: Arc::new(core),
             mutation_lock: Arc::new(Mutex::new(())),

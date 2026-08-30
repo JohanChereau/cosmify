@@ -39,6 +39,22 @@ jobs:
       - name: Run frontend checks
         run: pnpm check
 
+      - name: Build frontend
+        run: pnpm build
+
+      - name: Verify updater signing configuration
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
+            throw "Missing TAURI_SIGNING_PRIVATE_KEY GitHub Actions secret"
+          }
+          $config = Get-Content src-tauri/tauri.conf.json -Raw
+          if ($config -match "__COSMIFY_UPDATER_PUBLIC_KEY__") {
+            throw "Replace __COSMIFY_UPDATER_PUBLIC_KEY__ in src-tauri/tauri.conf.json before releasing"
+          }
+
       - name: Run Rust checks
         run: |
           cargo fmt --all -- --check
@@ -49,6 +65,8 @@ jobs:
         uses: tauri-apps/tauri-action@action-v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: 'Cosmify v__VERSION__'
@@ -60,6 +78,9 @@ jobs:
             - This release is unsigned unless the repository owner configures Windows code signing; SmartScreen may therefore show a reputation warning.
           releaseDraft: true
           prerelease: false
+          args: --config src-tauri/tauri.updater.conf.json
+          uploadUpdaterJson: true
+          updaterJsonPreferNsis: true
 
       - name: Generate SHA-256 checksums
         shell: pwsh

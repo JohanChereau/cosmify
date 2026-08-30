@@ -50,6 +50,16 @@
       "type": ["string", "null"],
       "pattern": "^icon\\.(png|jpg|jpeg|webp)$"
     },
+    "bannerGradientStart": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "default": "#5F5BE8"
+    },
+    "bannerGradientEnd": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "default": "#FF855E"
+    },
     "createdAt": {
       "type": "string",
       "format": "date-time"

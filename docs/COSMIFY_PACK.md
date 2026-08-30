@@ -30,6 +30,8 @@ Schema version 1. A machine-readable JSON Schema is available at [`schemas/cosmi
   "uuid": "7617db64-b974-4e25-b429-e6a6a92f8668",
   "version": "1.0.0",
   "icon": "icon.png",
+  "bannerGradientStart": "#5F5BE8",
+  "bannerGradientEnd": "#FF855E",
   "createdAt": "2026-08-30T10:00:00Z",
   "updatedAt": "2026-08-30T10:00:00Z"
 }
@@ -40,6 +42,7 @@ Schema version 1. A machine-readable JSON Schema is available at [`schemas/cosmi
 - `id` is an immutable internal library identifier used as the managed directory name.
 - `uuid` is editable pack metadata for authors and future Cosmify interoperability. It does **not** replace the selected Minecraft host UUID during installation.
 - `version` is intentionally a string so authors can use semantic versions or simple labels.
+- `bannerGradientStart` and `bannerGradientEnd` are optional `#RRGGBB` colors used only by the Cosmify library banner. Older metadata files that omit them automatically use the default Cosmify violet/coral gradient.
 
 ## Artwork
 

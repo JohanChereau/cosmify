@@ -100,6 +100,8 @@ export interface CosmeticPack {
   version: string;
   path: string;
   iconDataUrl?: string | null;
+  bannerGradientStart: string;
+  bannerGradientEnd: string;
   createdAt: string;
   updatedAt: string;
   analysis: CustomPackAnalysis;
@@ -112,4 +114,6 @@ export interface UpdateCosmeticPackInput {
   author: string;
   uuid: string;
   version: string;
+  bannerGradientStart: string;
+  bannerGradientEnd: string;
 }

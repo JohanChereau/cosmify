@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Cosmify",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "identifier": "app.cosmify.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -21,8 +21,9 @@
         "center": true,
         "resizable": true,
         "fullscreen": false,
-        "decorations": true,
-        "transparent": false
+        "decorations": false,
+        "transparent": false,
+        "shadow": true
       }
     ],
     "security": {
@@ -36,6 +37,15 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDUzRkYyN0Q0NTFCMDdDMzkKUldRNWZMQlIxQ2YvVS91LzlWV0dMMDlnN1FsWTlPeE9FeWh2eFVKTWNtQnhocHkwUUh2cXhHODgK",
+      "endpoints": ["https://github.com/JohanChereau/cosmify/releases/latest/download/latest.json"],
+      "windows": {
+        "installMode": "passive"
       }
     }
   }
