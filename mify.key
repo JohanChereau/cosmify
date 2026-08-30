@@ -1,0 +1,35 @@
+ .github/ISSUE_TEMPLATE/bug_report.yml     |    2 [32m+[m[31m-[m
+ .github/dependabot.yml                    |   27 [32m+[m[31m-[m
+ .github/workflows/release.yml             |   21 [32m+[m
+ CHANGELOG.md                              |   20 [32m+[m
+ Cargo.lock                                |  337 [32m++++[m[31m-[m
+ README.md                                 |    4 [32m+[m[31m-[m
+ crates/cosmify-core/Cargo.toml            |    2 [32m+[m[31m-[m
+ crates/cosmify-core/src/cosmetics.rs      |   76 [32m+[m[31m-[m
+ crates/cosmify-core/src/models.rs         |   23 [32m+[m
+ docs/COSMIFY_PACK.md                      |    3 [32m+[m
+ docs/RELEASING.md                         |   33 [32m+[m[31m-[m
+ package.json                              |    3 [32m+[m[31m-[m
+ pnpm-lock.yaml                            |   13 [32m+[m
+ schemas/cosmify-pack.schema.json          |   10 [32m+[m
+ src-tauri/Cargo.toml                      |    4 [32m+[m[31m-[m
+ src-tauri/capabilities/default.json       |   10 [32m+[m[31m-[m
+ src-tauri/gen/schemas/acl-manifests.json  | 1907 [32m+[m[31m----------------------------[m
+ src-tauri/gen/schemas/capabilities.json   |   10 [32m+[m[31m-[m
+ src-tauri/gen/schemas/desktop-schema.json |  108 [32m+[m[31m-[m
+ src-tauri/gen/schemas/windows-schema.json |  108 [32m+[m[31m-[m
+ src-tauri/icons/128x128.png               |  Bin [31m15278[m -> [32m12844[m bytes
+ src-tauri/icons/128x128@2x.png            |  Bin [31m39107[m -> [32m34735[m bytes
+ src-tauri/icons/256x256.png               |  Bin [31m39107[m -> [32m34735[m bytes
+ src-tauri/icons/32x32.png                 |  Bin [31m2185[m -> [32m2020[m bytes
+ src-tauri/icons/icon.ico                  |  Bin [31m68089[m -> [32m64447[m bytes
+ src-tauri/icons/icon.png                  |  Bin [31m67729[m -> [32m81748[m bytes
+ src-tauri/src/lib.rs                      |    1 [32m+[m
+ src-tauri/src/main.rs                     |    2 [32m+[m
+ src-tauri/tauri.conf.json                 |   16 [32m+[m[31m-[m
+ src/components/layout/AppShell.tsx        |   67 [32m+[m[31m-[m
+ src/lib/types.ts                          |    4 [32m+[m
+ src/pages/CosmeticsPage.tsx               |  120 [32m+[m[31m-[m
+ src/styles/globals.css                    |  326 [32m++++[m[31m-[m
+ tsconfig.app.tsbuildinfo                  |    2 [32m+[m[31m-[m
+ 34 files changed, 1246 insertions(+), 2013 deletions(-)

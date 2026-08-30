@@ -10,7 +10,7 @@ body:
     id: version
     attributes:
       label: Cosmify version
-      placeholder: 0.2.0
+      placeholder: e.g. 0.2.1
     validations:
       required: true
   - type: input

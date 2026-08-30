@@ -1,5 +1,16 @@
 use serde::{Deserialize, Serialize};
 
+pub const DEFAULT_BANNER_GRADIENT_START: &str = "#5F5BE8";
+pub const DEFAULT_BANNER_GRADIENT_END: &str = "#FF855E";
+
+fn default_banner_gradient_start() -> String {
+    DEFAULT_BANNER_GRADIENT_START.to_string()
+}
+
+fn default_banner_gradient_end() -> String {
+    DEFAULT_BANNER_GRADIENT_END.to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct HostPack {
@@ -151,6 +162,10 @@ pub struct CosmeticPackMetadata {
     pub uuid: String,
     pub version: String,
     pub icon: Option<String>,
+    #[serde(default = "default_banner_gradient_start")]
+    pub banner_gradient_start: String,
+    #[serde(default = "default_banner_gradient_end")]
+    pub banner_gradient_end: String,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -166,6 +181,10 @@ pub struct CosmeticPack {
     pub version: String,
     pub path: String,
     pub icon_data_url: Option<String>,
+    #[serde(default = "default_banner_gradient_start")]
+    pub banner_gradient_start: String,
+    #[serde(default = "default_banner_gradient_end")]
+    pub banner_gradient_end: String,
     pub created_at: String,
     pub updated_at: String,
     pub analysis: CustomPackAnalysis,
@@ -186,4 +205,8 @@ pub struct UpdateCosmeticPackRequest {
     pub author: String,
     pub uuid: String,
     pub version: String,
+    #[serde(default = "default_banner_gradient_start")]
+    pub banner_gradient_start: String,
+    #[serde(default = "default_banner_gradient_end")]
+    pub banner_gradient_end: String,
 }

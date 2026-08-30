@@ -1,6 +1,6 @@
 # ✦ Cosmify
 
-![Version](https://img.shields.io/badge/version-0.2.0-8b5cf6?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.2.1-8b5cf6?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Windows-2563eb?style=flat-square&logo=windows11&logoColor=white)
 ![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-native%20core-f97316?style=flat-square&logo=rust&logoColor=white)
@@ -127,7 +127,7 @@ Premium-cache discovery order:
 
 ## GitHub releases
 
-Pushing a version tag such as `v0.2.0` triggers `.github/workflows/release.yml`.
+Pushing a version tag such as `vX.Y.Z` triggers `.github/workflows/release.yml`.
 
 The workflow:
 

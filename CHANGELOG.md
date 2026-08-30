@@ -2,6 +2,26 @@
 
 All notable changes to Cosmify are documented here.
 
+## [0.2.1] - 2026-08-30
+
+### Added
+
+- Automatic application updates through GitHub Releases.
+- Customizable two-color gradients for cosmetic pack banners.
+- Random and default gradient presets.
+
+### Changed
+
+- Added a custom Windows title bar and improved native Windows 11 window styling.
+- Refined the application icon.
+
+### Fixed
+
+- Prevented a console window from opening alongside production builds.
+- Fixed rendering artifacts on gradient buttons.
+
+---
+
 ## [0.2.0] - 2026-08-30
 
 ### Added

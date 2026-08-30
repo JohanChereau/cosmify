@@ -12,7 +12,8 @@ use zip::ZipArchive;
 
 use crate::{
     validation::analyze_custom_pack, CosmeticPack, CosmeticPackMetadata, CosmifyError,
-    ImportCosmeticPackRequest, Result, UpdateCosmeticPackRequest,
+    ImportCosmeticPackRequest, Result, UpdateCosmeticPackRequest, DEFAULT_BANNER_GRADIENT_END,
+    DEFAULT_BANNER_GRADIENT_START,
 };
 
 pub const COSMIFY_DIR: &str = ".cosmify";
@@ -182,6 +183,8 @@ pub(crate) fn import_cosmetic_pack(
         uuid: default_uuid.clone(),
         version: default_version.clone(),
         icon: None,
+        banner_gradient_start: DEFAULT_BANNER_GRADIENT_START.to_string(),
+        banner_gradient_end: DEFAULT_BANNER_GRADIENT_END.to_string(),
         created_at: now.clone(),
         updated_at: now.clone(),
     });
@@ -250,6 +253,12 @@ pub(crate) fn update_cosmetic_pack(
     metadata.author = request.author.trim().to_string();
     metadata.uuid = request.uuid.trim().to_string();
     metadata.version = request.version.trim().to_string();
+    metadata.banner_gradient_start = normalize_hex_color(
+        &request.banner_gradient_start,
+        "Banner gradient start color",
+    )?;
+    metadata.banner_gradient_end =
+        normalize_hex_color(&request.banner_gradient_end, "Banner gradient end color")?;
     metadata.updated_at = Utc::now().to_rfc3339();
     write_metadata(&path, &metadata)?;
     load_cosmetic_pack(&path)
@@ -306,6 +315,8 @@ pub(crate) fn load_cosmetic_pack(path: &Path) -> Result<CosmeticPack> {
         version: metadata.version,
         path: path.to_string_lossy().into_owned(),
         icon_data_url,
+        banner_gradient_start: metadata.banner_gradient_start,
+        banner_gradient_end: metadata.banner_gradient_end,
         created_at: metadata.created_at,
         updated_at: metadata.updated_at,
         analysis,
@@ -466,6 +477,11 @@ fn read_metadata(pack: &Path) -> Result<CosmeticPackMetadata> {
             "Cosmify metadata exceeds supported field lengths".to_string(),
         ));
     }
+    validate_hex_color(
+        &metadata.banner_gradient_start,
+        "Banner gradient start color",
+    )?;
+    validate_hex_color(&metadata.banner_gradient_end, "Banner gradient end color")?;
     if let Some(icon) = metadata.icon.as_deref() {
         let icon_path = Path::new(icon);
         if icon_path.components().count() != 1
@@ -477,6 +493,27 @@ fn read_metadata(pack: &Path) -> Result<CosmeticPackMetadata> {
         }
     }
     Ok(metadata)
+}
+
+fn validate_hex_color(value: &str, label: &str) -> Result<()> {
+    let value = value.trim();
+    let valid = value.len() == 7
+        && value.starts_with('#')
+        && value[1..]
+            .chars()
+            .all(|character| character.is_ascii_hexdigit());
+    if valid {
+        Ok(())
+    } else {
+        Err(CosmifyError::InvalidCosmeticPack(format!(
+            "{label} must use the #RRGGBB format"
+        )))
+    }
+}
+
+fn normalize_hex_color(value: &str, label: &str) -> Result<String> {
+    validate_hex_color(value, label)?;
+    Ok(value.trim().to_ascii_uppercase())
 }
 
 fn write_metadata(pack: &Path, metadata: &CosmeticPackMetadata) -> Result<()> {
@@ -686,14 +723,51 @@ mod tests {
                 author: "Cosmify".to_string(),
                 uuid: "9d661f42-5214-45e3-8b2b-b91f9a19fa8e".to_string(),
                 version: "2.0.0".to_string(),
+                banner_gradient_start: "#123456".to_string(),
+                banner_gradient_end: "#ABCDEF".to_string(),
             },
         )
         .unwrap();
         assert_eq!(edited.name, "Night Pack");
+        assert_eq!(edited.banner_gradient_start, "#123456");
+        assert_eq!(edited.banner_gradient_end, "#ABCDEF");
         assert_eq!(list_cosmetic_packs(&library).unwrap().len(), 1);
 
         delete_cosmetic_pack(&library, &imported.id).unwrap();
         assert!(list_cosmetic_packs(&library).unwrap().is_empty());
+    }
+
+    #[test]
+    fn legacy_metadata_without_banner_colors_uses_cosmify_defaults() {
+        let temp = tempdir().unwrap();
+        let source = temp.path().join("Legacy Pack");
+        let library = temp.path().join("library");
+        create_pack(&source);
+
+        let imported = import_cosmetic_pack(
+            &library,
+            ImportCosmeticPackRequest {
+                source_path: source.to_string_lossy().into_owned(),
+            },
+        )
+        .unwrap();
+        let metadata_file = Path::new(&imported.path)
+            .join(COSMIFY_DIR)
+            .join(COSMIFY_MANIFEST);
+        let mut metadata: serde_json::Value =
+            serde_json::from_slice(&fs::read(&metadata_file).unwrap()).unwrap();
+        let object = metadata.as_object_mut().unwrap();
+        object.remove("bannerGradientStart");
+        object.remove("bannerGradientEnd");
+        fs::write(
+            &metadata_file,
+            serde_json::to_vec_pretty(&metadata).unwrap(),
+        )
+        .unwrap();
+
+        let loaded = load_cosmetic_pack(Path::new(&imported.path)).unwrap();
+        assert_eq!(loaded.banner_gradient_start, DEFAULT_BANNER_GRADIENT_START);
+        assert_eq!(loaded.banner_gradient_end, DEFAULT_BANNER_GRADIENT_END);
     }
 
     #[test]
