@@ -2,6 +2,25 @@
 
 All notable changes to Cosmify are documented here.
 
+## [0.2.2] - 2026-09-06
+
+### Added
+
+- Added a read-only cosmetic pack details view accessible directly from library cards.
+- Added the currently installed Cosmify version to Settings.
+
+### Changed
+
+- Optimized CI to reduce redundant frontend builds.
+- Improved updater signing validation by checking both the private key and its password before release builds.
+- Updated application icon assets.
+- Refreshed the README with improved project presentation, release information and updater documentation.
+
+### Fixed
+
+- Prevented Prettier from rewriting generated Tauri schemas.
+- Clarified privacy and updater-related documentation.
+
 ## [0.2.1] - 2026-08-30
 
 ### Added

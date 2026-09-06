@@ -1,6 +1,6 @@
 [package]
 name = "cosmify"
-version = "0.2.1"
+version = "0.2.2"
 description = "Modern Minecraft Bedrock Persona cosmetics manager"
 authors = ["Cosmify contributors"]
 edition = "2021"
