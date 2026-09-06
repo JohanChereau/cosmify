@@ -44,7 +44,7 @@ Then:
 
 1. copy the generated **public key content** into `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`, replacing `__COSMIFY_UPDATER_PUBLIC_KEY__`;
 2. create the GitHub Actions secret `TAURI_SIGNING_PRIVATE_KEY` containing either the private-key content or its supported value;
-3. if the key has a password, create `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` as well; otherwise that secret may be empty.
+3. create the GitHub Actions secret `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` containing the password used to protect the updater private key.
 
 Never commit the private key. Losing it prevents future releases from updating already-installed updater-enabled builds.
 

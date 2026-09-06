@@ -462,7 +462,7 @@ dependencies = [
 
 [[package]]
 name = "cosmify"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cosmify-core",
  "serde",
@@ -475,7 +475,7 @@ dependencies = [
 
 [[package]]
 name = "cosmify-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "aes 0.9.3",
  "base64 0.22.1",

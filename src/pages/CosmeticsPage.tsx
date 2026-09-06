@@ -35,6 +35,7 @@ export function CosmeticsPage() {
   const [hosts, setHosts] = useState<HostPack[]>([]);
   const [library, setLibrary] = useState<CosmeticPack[]>([]);
   const [selectedLibraryPack, setSelectedLibraryPack] = useState<CosmeticPack | null>(null);
+  const [viewing, setViewing] = useState<CosmeticPack | null>(null);
   const [editing, setEditing] = useState<CosmeticPack | null>(null);
   const [busy, setBusy] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
@@ -259,7 +260,13 @@ export function CosmeticsPage() {
         {library.length ? (
           <div className="cosmetic-grid">
             {library.map((pack) => (
-              <article className="cosmetic-card" key={pack.id}>
+              <article className="cosmetic-card cosmetic-card--interactive" key={pack.id}>
+                <button
+                  type="button"
+                  className="cosmetic-card__open"
+                  aria-label={`View ${pack.name}`}
+                  onClick={() => setViewing(pack)}
+                />
                 <div className="cosmetic-card__visual" style={packGradientStyle(pack)}>
                   {pack.iconDataUrl ? (
                     <img src={pack.iconDataUrl} alt="" />
@@ -281,7 +288,10 @@ export function CosmeticsPage() {
                     <button
                       className="icon-button"
                       aria-label={`Edit ${pack.name}`}
-                      onClick={() => setEditing(pack)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditing(pack);
+                      }}
                     >
                       <Pencil size={15} />
                     </button>
@@ -307,7 +317,10 @@ export function CosmeticsPage() {
                       size="sm"
                       icon={<Sparkles size={14} />}
                       disabled={busy}
-                      onClick={() => void selectPackPath(pack.path, pack)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void selectPackPath(pack.path, pack);
+                      }}
                     >
                       Install
                     </Button>
@@ -315,7 +328,10 @@ export function CosmeticsPage() {
                       variant="secondary"
                       size="sm"
                       icon={<Pencil size={13} />}
-                      onClick={() => setEditing(pack)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditing(pack);
+                      }}
                     >
                       Edit
                     </Button>
@@ -564,6 +580,20 @@ export function CosmeticsPage() {
         ) : null}
       </section>
 
+      <PackDetails
+        pack={viewing}
+        busy={busy}
+        onClose={() => setViewing(null)}
+        onEdit={(pack) => {
+          setViewing(null);
+          setEditing(pack);
+        }}
+        onInstall={(pack) => {
+          setViewing(null);
+          void selectPackPath(pack.path, pack);
+        }}
+      />
+
       <PackEditor
         pack={editing}
         busy={libraryBusy}
@@ -573,6 +603,105 @@ export function CosmeticsPage() {
         onDelete={deletePack}
       />
     </Page>
+  );
+}
+
+function PackDetails({
+  pack,
+  busy,
+  onClose,
+  onEdit,
+  onInstall
+}: {
+  pack: CosmeticPack | null;
+  busy: boolean;
+  onClose: () => void;
+  onEdit: (pack: CosmeticPack) => void;
+  onInstall: (pack: CosmeticPack) => void;
+}) {
+  if (!pack) return null;
+
+  return (
+    <Modal
+      open
+      title={pack.name}
+      description="Managed cosmetic pack details"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+          <div className="modal__footer-spacer" />
+          <Button variant="secondary" icon={<Pencil size={14} />} onClick={() => onEdit(pack)}>
+            Edit pack
+          </Button>
+          <Button icon={<Sparkles size={14} />} disabled={busy} onClick={() => onInstall(pack)}>
+            Install
+          </Button>
+        </>
+      }
+    >
+      <div className="pack-details__hero" style={packGradientStyle(pack)}>
+        <div className="pack-details__artwork">
+          {pack.iconDataUrl ? <img src={pack.iconDataUrl} alt="" /> : <Sparkles size={34} />}
+        </div>
+        <div className="pack-details__hero-copy">
+          <div className="pack-details__eyebrow">Cosmify cosmetic pack</div>
+          <strong>{pack.name}</strong>
+          <span>{pack.description || 'Custom Bedrock Persona cosmetics'}</span>
+        </div>
+        <Badge tone="accent">v{pack.version}</Badge>
+      </div>
+
+      <div className="pack-details__stats">
+        <div>
+          <strong>{pack.analysis.skinCount}</strong>
+          <span>Skins</span>
+        </div>
+        <div>
+          <strong>{pack.analysis.pngCount}</strong>
+          <span>Textures</span>
+        </div>
+        <div>
+          <strong>{pack.analysis.geometryCount}</strong>
+          <span>{pack.analysis.geometryCount === 1 ? 'Geometry' : 'Geometries'}</span>
+        </div>
+        <div>
+          <strong>{pack.analysis.fileCount}</strong>
+          <span>Files</span>
+        </div>
+      </div>
+
+      <div className="pack-details__info">
+        <div className="pack-details__row">
+          <span>Author</span>
+          <strong>{pack.author || 'Local pack'}</strong>
+        </div>
+        <div className="pack-details__row">
+          <span>Version</span>
+          <code>{pack.version}</code>
+        </div>
+        <div className="pack-details__row pack-details__row--stacked">
+          <span>UUID</span>
+          <code>{pack.uuid}</code>
+        </div>
+        <div className="pack-details__row pack-details__row--stacked">
+          <span>Managed path</span>
+          <code>{pack.path}</code>
+        </div>
+      </div>
+
+      <div className="pack-details__gradient">
+        <div>
+          <span>Banner gradient</span>
+          <strong>
+            {pack.bannerGradientStart.toUpperCase()} → {pack.bannerGradientEnd.toUpperCase()}
+          </strong>
+        </div>
+        <div className="pack-details__gradient-swatch" style={packGradientStyle(pack)} />
+      </div>
+    </Modal>
   );
 }
 

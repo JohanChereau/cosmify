@@ -8,10 +8,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   frontend:
     name: Frontend checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v7
@@ -23,14 +28,22 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check:version
-      - run: pnpm format:check
-      - run: pnpm check
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
 
-  rust-core:
-    name: Rust checks
+      - name: Verify version consistency
+        run: pnpm check:version
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Run frontend checks
+        run: pnpm check
+
+  desktop:
+    name: Windows desktop build
     runs-on: windows-latest
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v7
@@ -48,36 +61,25 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
 
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      # Tauri's generate_context!() needs frontendDist to exist even
+      # while compiling the Rust application for Clippy/tests.
+      # Build it once here and reuse it for the final desktop build.
       - name: Build frontend
         run: pnpm build
 
-      - run: cargo fmt --all -- --check
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Run Rust tests
+        run: cargo test --workspace
 
-      - run: cargo test --workspace
-
-  desktop-build:
-    name: Windows desktop build
-    runs-on: windows-latest
-    needs: [frontend, rust-core]
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - uses: dtolnay/rust-toolchain@1.98.0
-
-      - uses: Swatinem/rust-cache@v2
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm tauri:build
+      # The frontend was already built above. The CI-specific config
+      # disables Tauri's normal beforeBuildCommand to avoid building it again.
+      - name: Build Windows desktop application
+        run: pnpm exec tauri build --config src-tauri/tauri.ci.conf.json

@@ -12,8 +12,32 @@ jobs:
   release-windows:
     name: Build Windows release
     runs-on: windows-latest
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v7
+
+      # Fail as early as possible if the updater signing configuration
+      # is incomplete instead of discovering it after the full build.
+      - name: Verify updater signing configuration
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
+            throw "Missing TAURI_SIGNING_PRIVATE_KEY GitHub Actions secret"
+          }
+
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD)) {
+            throw "Missing TAURI_SIGNING_PRIVATE_KEY_PASSWORD GitHub Actions secret"
+          }
+
+          $config = Get-Content src-tauri/tauri.conf.json -Raw
+
+          if ($config -match "__COSMIFY_UPDATER_PUBLIC_KEY__") {
+            throw "Replace __COSMIFY_UPDATER_PUBLIC_KEY__ in src-tauri/tauri.conf.json before releasing"
+          }
 
       - uses: pnpm/action-setup@v6
 
@@ -39,21 +63,10 @@ jobs:
       - name: Run frontend checks
         run: pnpm check
 
+      # Build once. Both Rust validation and the Tauri release build
+      # reuse this frontend output.
       - name: Build frontend
         run: pnpm build
-
-      - name: Verify updater signing configuration
-        shell: pwsh
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        run: |
-          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
-            throw "Missing TAURI_SIGNING_PRIVATE_KEY GitHub Actions secret"
-          }
-          $config = Get-Content src-tauri/tauri.conf.json -Raw
-          if ($config -match "__COSMIFY_UPDATER_PUBLIC_KEY__") {
-            throw "Replace __COSMIFY_UPDATER_PUBLIC_KEY__ in src-tauri/tauri.conf.json before releasing"
-          }
 
       - name: Run Rust checks
         run: |
@@ -78,22 +91,37 @@ jobs:
             - This release is unsigned unless the repository owner configures Windows code signing; SmartScreen may therefore show a reputation warning.
           releaseDraft: true
           prerelease: false
-          args: --config src-tauri/tauri.updater.conf.json
+          args: --config src-tauri/tauri.ci.conf.json --config src-tauri/tauri.updater.conf.json
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
 
       - name: Generate SHA-256 checksums
         shell: pwsh
         run: |
-          $roots = @("target/release/bundle", "src-tauri/target/release/bundle") | Where-Object { Test-Path $_ }
-          if (-not $roots) { throw "No Tauri bundle directory was found" }
-          $files = Get-ChildItem -Path $roots -Recurse -File | Where-Object { $_.Extension -in ".exe", ".msi" }
-          if (-not $files) { throw "No installer artifacts were found" }
+          $roots = @(
+            "target/release/bundle",
+            "src-tauri/target/release/bundle"
+          ) | Where-Object { Test-Path $_ }
+
+          if (-not $roots) {
+            throw "No Tauri bundle directory was found"
+          }
+
+          $files = Get-ChildItem -Path $roots -Recurse -File |
+            Where-Object { $_.Extension -in ".exe", ".msi" }
+
+          if (-not $files) {
+            throw "No installer artifacts were found"
+          }
+
           $lines = foreach ($file in $files) {
             $hash = (Get-FileHash -Algorithm SHA256 $file.FullName).Hash.ToLowerInvariant()
             "$hash  $($file.Name)"
           }
-          $lines | Sort-Object | Set-Content -Encoding ascii SHA256SUMS.txt
+
+          $lines |
+            Sort-Object |
+            Set-Content -Encoding ascii SHA256SUMS.txt
 
       - name: Attach checksums to release
         shell: pwsh
